@@ -265,7 +265,6 @@ class meshFile(object):
 
 
                     stripLength, invertReading, stripCount, firstVertex, lastVertex = struct.unpack("HBBHH", bs.read(8))
-                    byteLength = stripLength * 2
 
                     print("strip info",stripLength, invertReading, stripCount , firstVertex, lastVertex )    
                     # inverReading :  0  -  triangle strip,  1 - triangle list                        
@@ -280,6 +279,7 @@ class meshFile(object):
                     
                     '''
                     # alternative tri-strip drawing code
+                        byteLength = stripLength * 2
                         for s in range(stripCount):
                             idxBuf = iBuf[ibOffset:ibOffset + byteLength ]
                             
