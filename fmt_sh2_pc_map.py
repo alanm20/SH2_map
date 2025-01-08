@@ -92,8 +92,6 @@ class meshFile(object):
                         
         self.matList = []
         self.texList = []
-        self.num_GB_tex = 0
-        self.num_TR_tex = 0
 
     @classmethod
     def create_instance(cls, value):
@@ -109,7 +107,7 @@ class meshFile(object):
             
             area_map_fn = os.path.join(dir, self.area_name +".map")
             print("file name ",filepath, area_map_fn)
-            # load GB and TR tex file if they exist in same directory
+            # load common map file if it exist in same directory
             if os.path.exists(area_map_fn): 
                 with open(area_map_fn,"rb") as file:    
                     tlen = len(self.texList)
@@ -217,12 +215,11 @@ class meshFile(object):
             for j in range(vertexSectionCount):
                 bs.seek(vSectionStart + vSectionInfo[j][0])
                 vBuf = bs.read(vSectionInfo[j][2])    
-                vBufs.append(vBuf) #(vs,vn,vc,uv))
-                #print (" vArray info", len(sectionVerts[j][0]), sectionVerts[j][0][:3],sectionVerts[j][1][:3],sectionVerts[j][2][:3],sectionVerts[j][3][:3])
+                vBufs.append(vBuf) 
             
             # read all parts and strip
             bs.seek(partGroupStart)
-            totallen = 0
+            
             ibOffset = 0
             for j in range(meshPartGroupCount):
 
@@ -264,34 +261,23 @@ class meshFile(object):
                     rapi.rpgSetTransform(NoeMat43((NoeVec3((-1, 0, 0)), NoeVec3((0, -1, 0)), NoeVec3((0, 0, 1)), NoeVec3((0, 0, 0)))))     
 
 
-                    stripLength, invertReading, stripCount, firstVertex, lastVertex = struct.unpack("HBBHH", bs.read(8))
+                    stripLength, unknown1, primitiveType, firstVertex, lastVertex = struct.unpack("HBBHH", bs.read(8))
 
-                    print("strip info",stripLength, invertReading, stripCount , firstVertex, lastVertex )    
-                    # inverReading :  0  -  triangle strip,  1 - triangle list                        
-                    idxLen = stripLength * stripCount 
+                    print("strip info",stripLength, unknown1, primitiveType , firstVertex, lastVertex )    
+                    # primitiveType :  1  -  triangle strip, 2 - triangle fan,  3 - triangle list                        
+
+                    idxLen  = stripLength * primitiveType
+                    if primitiveType == 1:
+                        idxLen = stripLength  
+                        triType = noesis.RPGEO_TRIANGLE_STRIP
+                    if primitiveType == 3:
+                        idxLen = stripLength * 3       
+                        triType =  noesis.RPGEO_TRIANGLE            
                     byteLength = idxLen * 2
                     idxBuf = iBuf[ibOffset:ibOffset + byteLength  ]             
-                    if invertReading:                            
-                        rapi.rpgCommitTriangles(idxBuf, noesis.RPGEODATA_USHORT, idxLen , noesis.RPGEO_TRIANGLE, 0x1)   
-                    else:
-                        rapi.rpgCommitTriangles(idxBuf, noesis.RPGEODATA_USHORT, idxLen, noesis.RPGEO_TRIANGLE_STRIP, 0x1)                          
+                    rapi.rpgCommitTriangles(idxBuf, noesis.RPGEODATA_USHORT, idxLen , triType , 0x1)   
                     ibOffset += byteLength
-                    
-                    '''
-                    # alternative tri-strip drawing code
-                        byteLength = stripLength * 2
-                        for s in range(stripCount):
-                            idxBuf = iBuf[ibOffset:ibOffset + byteLength ]
-                            
-                            idxLen = stripLength                        
-                            rapi.rpgCommitTriangles(idxBuf, noesis.RPGEODATA_USHORT, stripLength, noesis.RPGEO_TRIANGLE_STRIP, 0x1)  
-                            
-                            ibOffset += byteLength
-                    '''
-                    totallen += stripLength * stripCount
                 rapi.rpgClearBufferBinds() 
-
-            print (" total strip len",totallen)
 
 
     def loadDecals(self,bs):
