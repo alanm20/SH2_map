@@ -2,12 +2,12 @@
 
 Noesis plugin script for viewing Silent Hill 2 [PC] map files
 
-Remember to have the area xx.map file in the same directory as the .map file. Plugin will look for common texutures in area map file.
-Material texture blending does not quite work, remember to toggle Neosis's blending mode to make all meshes visible.
+Some map files do not contain all the textures they depend on. It is best to keep all map of the same area in the same directory. Plugin will search for missing textures in the current directory.
+Material texture blending not fully working, remember to cycle through Neosis's blending mode to make all meshes visible.
 
-This is based on file format researchs from following repos:
+This is based on file format research from following repos:
 
-#Credits:
+# Credits:
 
 SH2 Map file format information from Polymega's https://github.com/Polymega/SilentHillDatabase
 
