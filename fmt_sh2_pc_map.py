@@ -2,13 +2,14 @@
 # Silent Hill 2 PC Map loader
 # alanm1
 # v0.1 initial release
+# v0.2 Vertex color does not work well, disabled for now. Added texture searching on other map file
 
 # Credits:
 # SH2 Map file format information from Polymega's https://github.com/Polymega/SilentHillDatabase
 # Texture format information from iOrange's SH2tex  https://github.com/iOrange/sh2tex
 
 MeshScale = 1.0         #Override mesh scale (default is 1.0)
-debug = 0                       #Prints debug info (1 = on, 0 = off)
+debug = 0               #Prints debug info (1 = on, 0 = off)
 
 from inc_noesis import *
 import math
@@ -239,10 +240,15 @@ class meshFile(object):
                 mode,textureID, materialColor, overlayColor, specularity = struct.unpack("HHIIf",bs.read(16))
                 matName = "Mat_" + str(i)                    
                 texName = '{0:#010x}'.format(textureID)
-                # what to do with textureID 0 ?
+
                 if textureID and textureID  not in self.texIDs:
                     self.missingIDs.add(textureID)
-                mat = NoeMaterial(matName,texName)
+                mat = NoeMaterial(matName,texName)                
+
+                #if textureID == 0: # what to do with textureID 0 and emmisive materials?
+                #    rgba=struct.unpack("BBBB",struct.pack("I",materialColor))
+                #    diffuseColor = NoeVec4([rgba[0]/255.0,rgba[2]/255.0,rgba[2]/255.0,rgba[3]/255.0])
+                #    mat.setDiffuseColor(diffuseColor)
                 mat.setBlendMode(1,6)
                 self.matList.append(mat)                    
                 
@@ -270,17 +276,11 @@ class meshFile(object):
                                 bcFormat = noesis.FOURCC_BC3
                         
                         texName= '{0:#010x}'.format(textureId)      
-                        texFound = False
-                        for t in self.texList:   # don't create already exist texture
-                            if t.name == texName:
-                                texFound = True
-                                break                            
-                        if texFound == False:
-                            ddsData = rapi.imageDecodeDXT(pixels, s_width, s_height, bcFormat)
-                            ddsFmt = noesis.NOESISTEX_RGBA32
-                            if debug: print ("**** Add texture to list:",texName)
-                            self.texList.append(NoeTexture(texName, s_width, s_height, ddsData, ddsFmt))   
-                            self.texIDs.add(textureId)                      
+                        ddsData = rapi.imageDecodeDXT(pixels, s_width, s_height, bcFormat)
+                        ddsFmt = noesis.NOESISTEX_RGBA32
+                        if debug: print ("**** Add texture to list:",texName)
+                        self.texList.append(NoeTexture(texName, s_width, s_height, ddsData, ddsFmt))   
+                        self.texIDs.add(textureId)                      
                     else:
                         pixels = None
                     
@@ -337,6 +337,7 @@ class meshFile(object):
                     rapi.rpgBindNormalBufferOfs(vBufs[sectionId], noesis.RPGEODATA_FLOAT, vertexSize, 0xC )
                 if vertexSize >=0x24:
                     uvOffset = 0x1C                    
+                    # vertex color buffer does not work quite right, disable for now
                     #rapi.rpgBindColorBufferOfs(vBufs[sectionId], noesis.RPGEODATA_BYTE, vertexSize, 0x18, 4)
                 if vertexSize >=0x14:                    
                     rapi.rpgBindUV1BufferOfs(vBufs[sectionId], noesis.RPGEODATA_FLOAT, vertexSize, uvOffset)
