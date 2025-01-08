@@ -239,7 +239,7 @@ class meshFile(object):
                     rapi.rpgBindNormalBufferOfs(vBufs[sectionId], noesis.RPGEODATA_FLOAT, vertexSize, 0xC )
                 if vertexSize >=0x24:
                     uvOffset = 0x1C                    
-                    rapi.rpgBindColorBufferOfs(vBufs[sectionId], noesis.RPGEODATA_BYTE, vertexSize, 0x18, 4)
+                    #rapi.rpgBindColorBufferOfs(vBufs[sectionId], noesis.RPGEODATA_BYTE, vertexSize, 0x18, 4)
                 if vertexSize >=0x14:                    
                     rapi.rpgBindUV1BufferOfs(vBufs[sectionId], noesis.RPGEODATA_FLOAT, vertexSize, uvOffset)
 
