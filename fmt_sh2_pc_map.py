@@ -313,6 +313,12 @@ class meshFile(object):
             for j in range(vertexSectionCount):
                 bs.seek(vSectionStart + vSectionInfo[j][0])
                 vBuf = bs.read(vSectionInfo[j][2])    
+                if vSectionInfo[j][1] >= 0x24: # has vertex Color
+                    varray = bytearray(vBuf)
+                    for c in range(0, len(varray), vertexSize):
+                        # swap R and B color component
+                        varray[c+0x18], varray[c+0x1a] = varray[c+0x1a], varray[c+0x18]
+                    vBuf=bytes(varray)                 
                 vBufs.append(vBuf) 
             
             # read all parts and strip
@@ -336,9 +342,10 @@ class meshFile(object):
                     uvOffset = 0x18
                     rapi.rpgBindNormalBufferOfs(vBufs[sectionId], noesis.RPGEODATA_FLOAT, vertexSize, 0xC )
                 if vertexSize >=0x24:
-                    uvOffset = 0x1C                    
+                    uvOffset = 0x1C         
                     # vertex color buffer does not work quite right, disable for now
-                    #rapi.rpgBindColorBufferOfs(vBufs[sectionId], noesis.RPGEODATA_BYTE, vertexSize, 0x18, 4)
+                    #rapi.rpgBindColorBufferOfs(vBufs[sectionId], noesis.RPGEODATA_UBYTE, vertexSize, 0x18, 4)
+                
                 if vertexSize >=0x14:                    
                     rapi.rpgBindUV1BufferOfs(vBufs[sectionId], noesis.RPGEODATA_FLOAT, vertexSize, uvOffset)
 
@@ -411,6 +418,12 @@ class meshFile(object):
         for j in range(vertexSectionCount):    
             bs.seek(vs_start + vSectionInfo[j][0])
             vBuf = bs.read(vSectionInfo[j][2])
+            if vSectionInfo[j][1] >= 0x24: # has vertex Color
+                varray = bytearray(vBuf)
+                for c in range(0, len(varray), vertexSize):
+                    # swap R and B color component
+                    varray[c+0x18], varray[c+0x1a] = varray[c+0x1a], varray[c+0x18]
+                vBuf=bytes(varray)                
             vBufs[j] = vBuf        
 
         bs.seek(decalGroups_start + offsetToIndices)
@@ -430,10 +443,11 @@ class meshFile(object):
             rapi.rpgBindPositionBufferOfs(vBufs[sectionId], noesis.RPGEODATA_FLOAT, vertexSize, 0x0)
             if vertexSize >=0x20:
                 uvOffset = 0x18
-                rapi.rpgBindNormalBufferOfs(vBufs[sectionId], noesis.RPGEODATA_FLOAT, vertexSize, 0xC )
+                #rapi.rpgBindNormalBufferOfs(vBufs[sectionId], noesis.RPGEODATA_FLOAT, vertexSize, 0xC )
             if vertexSize >=0x24:
-                uvOffset = 0x1C                    
-                rapi.rpgBindColorBufferOfs(vBufs[sectionId], noesis.RPGEODATA_BYTE, vertexSize, 0x18, 4)
+                uvOffset = 0x1C         
+                # vertex color buffer does not work quite right, disable for now                
+                #rapi.rpgBindColorBufferOfs(vBufs[sectionId], noesis.RPGEODATA_UBYTE, vertexSize, 0x18, 4)
             if vertexSize >=0x14:                    
                 rapi.rpgBindUV1BufferOfs(vBufs[sectionId], noesis.RPGEODATA_FLOAT, vertexSize, uvOffset)
 
